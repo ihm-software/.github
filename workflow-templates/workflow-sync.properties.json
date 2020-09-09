@@ -1,0 +1,14 @@
+{
+    "name": "ihm workflow syncs",
+    "description": "sync for workflows across repos",
+    "iconName": "example-icon",
+    "categories": [
+        "Go",
+        "Java"
+    ],
+    "filePatterns": [
+        "package.json$",
+        "^Dockerfile",
+        ".*\\.md$"
+    ]
+}

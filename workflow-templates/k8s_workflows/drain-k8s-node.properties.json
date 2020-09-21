@@ -1,0 +1,6 @@
+{
+    "name": "Drain Kubernetes node",
+    "description": "Github Action that handles draining a node of pods in a Kubernetes cluster.",
+    "iconName": "example-icon",
+    "categories": ["Kubernetes"]
+  }

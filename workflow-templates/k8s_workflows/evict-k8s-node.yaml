@@ -1,0 +1,47 @@
+name: "Evict Kubernetes node"
+
+on:
+  workflow_dispatch:
+    inputs:
+      clusterName:
+        description: "Name of Kubernetes cluster"
+        required: true
+      nodeName:
+        description: "Private DNS name of Kubernetes node to cordon. e.g ip-10-169-153-13.ec2.internal"
+        required: true
+
+steps:
+  cordon:
+    name: "Evict Kubernetes Node"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v2
+      - name: "Configure AWS CLI"
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.SRE_EKS_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.SRE_EKS_AWS_ACCESS_KEY_ID }}
+          aws-region: "us-east-1"
+      - name:
+        run: |
+          export INSTANCE_ID=$(aws ec2 describe-instance --filters "Name=private-dns-name,Values=${{ github.event.inputs.nodeName }}" "Name=tag:kubernetes.io/cluster/${github.event.inputs.clusterName},Values=owned" --query 'Reservations[*].Instances[*].[InstanceId]' --output text)
+          aws ec2 terminate-instances --instance-ids $INSTANCE_ID
+      - name: "Cordon Failed"
+        # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-using-status-check-functions
+        if: ${{ failure() }}
+        uses: archive/github-actions-slack@v1.0.3
+        with:
+          slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+          slack-channel: terraform
+          slack-text: |
+            Kubernetes node eviction for the node "${{ github.event.inputs.nodeName }}" failed for the "${{ github.event.inputs.clusterName }}" EKS cluster.
+      - name: "Cordon Was Successful"
+        # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-using-status-check-functions
+        if: ${{ success() }}
+        uses: archive/github-actions-slack@v1.0.3
+        with:
+          slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+          slack-channel: terraform
+          slack-text: |
+            Kubernetes node eviction for the node "${{ github.event.inputs.nodeName }}" was successful for the "${{ github.event.inputs.clusterName }}" EKS cluster.

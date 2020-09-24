@@ -1,0 +1,6 @@
+{
+  "name": "Terraform Apply",
+  "description": "Applies a Terraform root module to an environment based upon the environment path passed to the inputs",
+  "iconName": "example-icon",
+  "categories": ["Terraform"]
+}

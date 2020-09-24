@@ -27,6 +27,8 @@ jobs:
               - 'sandbox/**/*'
             nonprod:
               - 'nonprod/**/*'
+            prod:
+              - 'prod/**/*'
 
       - name: "Sandbox Root Module Init"
         if: steps.filter.outputs.sandbox == 'true'
@@ -40,6 +42,14 @@ jobs:
         if: steps.filter.outputs.nonprod == 'true'
         id: nonprod-init
         run: cd nonprod && terraform init -no-color
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: "Prod Root Module Init"
+        if: steps.filter.outputs.prod == 'true'
+        id: prod-init
+        run: cd prod && terraform init -no-color
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -60,6 +70,14 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
+      - name: "Prod Root Module Validation"
+        if: steps.filter.outputs.prod == 'true'
+        id: prod-validation
+        run: cd prod && terraform validate -no-color
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
       - name: "Sandbox Root Module Plan"
         if: steps.filter.outputs.sandbox == 'true'
         id: sandbox-plan
@@ -72,6 +90,14 @@ jobs:
         if: steps.filter.outputs.nonprod == 'true'
         id: nonprod-plan
         run: cd nonprod && terraform plan -no-color
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: "Prod Root Module Plan"
+        if: steps.filter.outputs.prod == 'true'
+        id: prod-plan
+        run: cd prod && terraform plan -no-color
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -116,6 +142,34 @@ jobs:
             const output = `#### NonProd Environment Terraform Plan \`
             #### NonProd Environment Terraform Validation 🤖${{ steps.nonprod-validation.outputs.stdout }}
             #### NonProd Environment Terraform Plan 📖\`${{ steps.nonprod-plan.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`${process.env.TF_PLAN}\`\`\`
+
+            </details>
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Workflow: \`${{ github.workflow }}\`*`;
+              
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: "Prod Plan Comment"
+        if: steps.filter.outputs.prod == 'true'
+        id: prod-plan-comment
+        uses: actions/github-script@0.9.0
+        env:
+          TF_PLAN: "terraform\n${{ steps.prod-plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### NonProd Environment Terraform Plan \`
+            #### NonProd Environment Terraform Validation 🤖${{ steps.prod-validation.outputs.stdout }}
+            #### NonProd Environment Terraform Plan 📖\`${{ steps.prod-plan.outcome }}\`
 
             <details><summary>Show Plan</summary>
 

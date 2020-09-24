@@ -1,0 +1,6 @@
+{
+  "name": "Pull Request Planner",
+  "description": "Generates a Terraform plan for the modified environment and dumps the plan in the pull request as a comment",
+  "iconName": "example-icon",
+  "categories": ["Terraform"]
+}

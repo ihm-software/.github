@@ -1,0 +1,52 @@
+name: "Cordon Kubernetes node"
+
+on:
+  workflow_dispatch:
+    inputs:
+      clusterName:
+        description: "Name of Kubernetes cluster"
+        required: true
+      nodeName:
+        description: "Private DNS name of Kubernetes node to cordon. e.g ip-10-169-153-13.ec2.internal"
+        required: true
+
+steps:
+  cordon:
+    name: "Cordon Kubernetes Node"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v2
+      - name: "Configure AWS CLI"
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ""
+          aws-secret-access-key: ""
+          aws-region: ""
+      - name: "Generate Kubernetes config"
+        run: |
+          aws eks update-kubeconfig --name ${{ github.event.inputs.clusterName }}
+          export KUBE_CONFIG_DATA=$(cat $HOME/.kube/config | base64)
+      - name: "Cordon Node"
+        uses: steebchen/kubectl@master
+        with:
+          args: "cordon ${{ github.event.inputs.nodeName }}"
+      - name: "Cordon Failed"
+        # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-using-status-check-functions
+        if: ${{ failure() }}
+        uses: archive/github-actions-slack@v1.0.3
+        with:
+          slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+          slack-channel: terraform
+          slack-text: |
+            Kubernetes node cordoning for the node "${{ github.event.inputs.nodeName }}" failed for the "${{ github.event.inputs.clusterName }}" EKS cluster.
+
+      - name: "Cordon Was Successful"
+        # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-using-status-check-functions
+        if: ${{ success() }}
+        uses: archive/github-actions-slack@v1.0.3
+        with:
+          slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+          slack-channel: terraform
+          slack-text: |
+            Kubernetes node cordoning for the node "${{ github.event.inputs.nodeName }}" was successful for the "${{ github.event.inputs.clusterName }}" EKS cluster.

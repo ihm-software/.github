@@ -1,0 +1,6 @@
+{
+    "name": "Evict Kubernetes node",
+    "description": "Github Action that handles evicting a node in a Kubernetes cluster.",
+    "iconName": "example-icon",
+    "categories": ["Kubernetes"]
+  }

@@ -1,0 +1,6 @@
+{
+  "name": "Cordon Kubernetes node",
+  "description": "Github Action that handles cordoning a node in a Kubernetes cluster.",
+  "iconName": "example-icon",
+  "categories": ["Kubernetes"]
+}

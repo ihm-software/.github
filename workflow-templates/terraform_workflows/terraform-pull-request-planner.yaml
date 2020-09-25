@@ -1,4 +1,4 @@
-name: "Terraform PR Builder"
+name: "Terraform Pull Request Builder"
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ on:
 jobs:
   plan:
     name: "Terraform Plans"
-    runs-on: ubuntu-latest
+    runs-on: x2-runners #ubuntu-latest
     steps:
       - name: "Checkout"
         uses: actions/checkout@master
@@ -16,7 +16,7 @@ jobs:
       - name: "Setup Terraform"
         uses: hashicorp/setup-terraform@v1
         with:
-          terraform_version: 0.13.2
+          terraform_version: 0.12.18
 
       - name: "Path Filter"
         uses: dorny/paths-filter@v2.2.1
@@ -35,72 +35,72 @@ jobs:
         id: sandbox-init
         run: cd sandbox && terraform init -no-color
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.SRE_TERRAFORM_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SRE_TERRAFORM_AWS_SECRET_KEY }}
 
       - name: "Nonprod Root Module Init"
         if: steps.filter.outputs.nonprod == 'true'
         id: nonprod-init
         run: cd nonprod && terraform init -no-color
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.SRE_TERRAFORM_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SRE_TERRAFORM_AWS_SECRET_KEY }}
 
       - name: "Prod Root Module Init"
         if: steps.filter.outputs.prod == 'true'
         id: prod-init
         run: cd prod && terraform init -no-color
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.SRE_TERRAFORM_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SRE_TERRAFORM_AWS_SECRET_KEY }}
 
       - name: "Sandbox Root Module Validation"
         if: steps.filter.outputs.sandbox == 'true'
         id: sandbox-validation
         run: cd sandbox && terraform validate -no-color
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.SRE_TERRAFORM_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SRE_TERRAFORM_AWS_SECRET_KEY }}
 
       - name: "NonProd Root Module Validation"
         if: steps.filter.outputs.nonprod == 'true'
         id: nonprod-validation
         run: cd nonprod && terraform validate -no-color
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.SRE_TERRAFORM_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SRE_TERRAFORM_AWS_SECRET_KEY }}
 
       - name: "Prod Root Module Validation"
         if: steps.filter.outputs.prod == 'true'
         id: prod-validation
         run: cd prod && terraform validate -no-color
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.SRE_TERRAFORM_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SRE_TERRAFORM_AWS_SECRET_KEY }}
 
       - name: "Sandbox Root Module Plan"
         if: steps.filter.outputs.sandbox == 'true'
         id: sandbox-plan
         run: cd sandbox && terraform plan -no-color
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.SRE_TERRAFORM_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SRE_TERRAFORM_AWS_SECRET_KEY }}
 
       - name: "NonProd Root Module Plan"
         if: steps.filter.outputs.nonprod == 'true'
         id: nonprod-plan
         run: cd nonprod && terraform plan -no-color
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.SRE_TERRAFORM_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SRE_TERRAFORM_AWS_SECRET_KEY }}
 
       - name: "Prod Root Module Plan"
         if: steps.filter.outputs.prod == 'true'
         id: prod-plan
         run: cd prod && terraform plan -no-color
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.SRE_TERRAFORM_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SRE_TERRAFORM_AWS_SECRET_KEY }}
 
       - name: "Sandbox Plan Comment"
         if: steps.filter.outputs.sandbox == 'true'
@@ -167,9 +167,9 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const output = `#### NonProd Environment Terraform Plan \`
-            #### NonProd Environment Terraform Validation 🤖${{ steps.prod-validation.outputs.stdout }}
-            #### NonProd Environment Terraform Plan 📖\`${{ steps.prod-plan.outcome }}\`
+            const output = `#### Prod Environment Terraform Plan \`
+            #### Prod Environment Terraform Validation 🤖${{ steps.prod-validation.outputs.stdout }}
+            #### Prod Environment Terraform Plan 📖\`${{ steps.prod-plan.outcome }}\`
 
             <details><summary>Show Plan</summary>
 

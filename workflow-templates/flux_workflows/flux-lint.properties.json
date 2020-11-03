@@ -1,0 +1,6 @@
+{
+    "name": "Flux lint",
+    "description": "Github Action that handles linting.",
+    "iconName": "example-icon",
+    "categories": ["Flux"]
+  }

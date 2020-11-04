@@ -1,0 +1,15 @@
+name: Lint flux yaml
+
+on:
+  pull_request:
+
+jobs:
+  lint-flux-yaml:
+    runs-on: x2-runners
+    steps:
+      - uses: actions/checkout@master
+      - name: yaml-lint
+        uses: ibiqlik/action-yamllint@master
+        with:
+          file_or_dir: envs/
+          config_file: .github/yamllint-config.yml

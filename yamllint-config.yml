@@ -1,0 +1,5 @@
+
+extends: relaxed
+
+rules:
+  line-length: disable  # don't bother me with this rule
